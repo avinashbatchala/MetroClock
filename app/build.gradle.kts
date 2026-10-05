@@ -6,6 +6,7 @@ import java.io.FileInputStream
 plugins {
     alias(libs.plugins.android)
     alias(libs.plugins.kotlinSerialization)
+    alias(libs.plugins.kotlinCompose)
     alias(libs.plugins.ksp)
     alias(libs.plugins.detekt)
 }
@@ -15,6 +16,11 @@ val keystoreProperties = Properties()
 if (keystorePropertiesFile.exists()) {
     keystoreProperties.load(FileInputStream(keystorePropertiesFile))
 }
+
+// Shared MetroSuite debug signing identity so same-signature IPC (live tiles) works in dev.
+// Debug keys are non-sensitive; release signing is untouched. Falls back to the Android
+// default debug keystore when built outside MetroSuite.
+val metroDebugKeystoreFile: File = rootProject.file("../../tools/metro-debug.keystore")
 
 fun hasSigningVars(): Boolean {
     return providers.environmentVariable("SIGNING_KEY_ALIAS").orNull != null
@@ -32,7 +38,9 @@ android {
     compileSdk = project.libs.versions.app.build.compileSDKVersion.get().toInt()
 
     defaultConfig {
-        applicationId = project.property("APP_ID").toString()
+        // Keep the upstream namespace (org.fossify.clock) so R/BuildConfig resolve, but use a
+        // MetroSuite-specific application id for distributed builds.
+        applicationId = (project.findProperty("METRO_APP_ID") ?: project.property("APP_ID")).toString()
         minSdk = project.libs.versions.app.build.minimumSDK.get().toInt()
         targetSdk = project.libs.versions.app.build.targetSDK.get().toInt()
         versionName = project.property("VERSION_NAME").toString()
@@ -60,16 +68,29 @@ android {
         } else {
             logger.warn("Warning: No signing config found. Build will be unsigned.")
         }
+
+        if (metroDebugKeystoreFile.exists()) {
+            register("metroDebug") {
+                storeFile = metroDebugKeystoreFile
+                storePassword = "android"
+                keyAlias = "androiddebugkey"
+                keyPassword = "android"
+            }
+        }
     }
 
     buildFeatures {
         viewBinding = true
         buildConfig = true
+        compose = true
     }
 
     buildTypes {
         debug {
             applicationIdSuffix = ".debug"
+            if (metroDebugKeystoreFile.exists()) {
+                signingConfig = signingConfigs.getByName("metroDebug")
+            }
         }
         release {
             isMinifyEnabled = true
@@ -142,6 +163,24 @@ detekt {
 
 dependencies {
     implementation(libs.fossify.commons)
+
+    // MetroSuite shared design system + live tile contract (composite-build substitutions).
+    implementation(libs.metro.ui)
+    implementation(libs.live.tile.contract)
+
+    // Compose is used for the Metro presentation layer only; the Fossify alarm/timer
+    // backend stays view/persistence based.
+    implementation(platform(libs.androidx.compose.bom))
+    implementation(libs.androidx.compose.ui)
+    implementation(libs.androidx.compose.ui.graphics)
+    implementation(libs.androidx.compose.ui.tooling.preview)
+    implementation(libs.androidx.compose.foundation)
+    implementation(libs.androidx.compose.material3)
+    implementation(libs.androidx.activity.compose)
+    implementation(libs.androidx.fragment.compose)
+    implementation(libs.androidx.lifecycle.runtime.compose)
+    implementation(libs.androidx.lifecycle.viewmodel.compose)
+    debugImplementation(libs.androidx.compose.ui.tooling)
 
     implementation(libs.bundles.lifecycle)
     implementation(libs.androidx.constraintlayout)

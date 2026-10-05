@@ -15,3 +15,11 @@ dependencyResolutionManagement {
     }
 }
 include(":app")
+
+// MetroSuite shared builds (composite build; each stays an independent Gradle build).
+// When this app is built outside MetroSuite these directories are absent, so guard them.
+listOf("../../design", "../../shared/live-tile-contract").forEach { path ->
+    if (file(path).exists()) {
+        includeBuild(path)
+    }
+}
