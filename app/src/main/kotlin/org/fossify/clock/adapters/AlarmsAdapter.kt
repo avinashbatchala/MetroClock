@@ -21,7 +21,7 @@ import org.fossify.commons.adapters.MyRecyclerViewAdapter
 import org.fossify.commons.dialogs.ConfirmationDialog
 import org.fossify.commons.extensions.applyColorFilter
 import org.fossify.commons.extensions.beVisibleIf
-import org.fossify.commons.extensions.getSelectedDaysString
+import org.fossify.clock.extensions.getSelectedDaysStringCompat
 import org.fossify.commons.extensions.move
 import org.fossify.commons.helpers.EVERY_DAY_BIT
 import org.fossify.commons.helpers.SORT_BY_CUSTOM
@@ -203,7 +203,7 @@ class AlarmsAdapter(
                 activity.getString(org.fossify.commons.R.string.every_day)
             } else {
                 // TODO: This does not respect config.firstDayOfWeek
-                activity.getSelectedDaysString(alarm.days)
+                activity.getSelectedDaysStringCompat(alarm.days)
             }
         }
 

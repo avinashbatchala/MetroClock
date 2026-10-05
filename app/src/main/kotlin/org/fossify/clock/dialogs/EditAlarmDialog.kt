@@ -120,9 +120,11 @@ class EditAlarmDialog(
             editAlarmLabelImage.applyColorFilter(textColor)
             editAlarm.setText(alarm.label)
 
+            // MetroClock fix: getStringArray(...).toList() returns an Arrays$ArrayList, not an
+            // ArrayList, so the upstream cast crashes. toMutableList() preserves the intent.
             val dayLetters =
                 activity.resources.getStringArray(org.fossify.commons.R.array.week_day_letters)
-                    .toList() as ArrayList<String>
+                    .toMutableList()
             val dayIndexes = activity.rotateWeekdays(arrayListOf(0, 1, 2, 3, 4, 5, 6))
 
             dayIndexes.forEach {
