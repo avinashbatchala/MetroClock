@@ -207,6 +207,7 @@ class AlarmController(
     private fun notifyObservers() {
         context.updateWidgets()
         bus.post(AlarmEvent.Refresh)
+        org.fossify.clock.providers.ClockLiveTileProvider.notifyChanged(context)
     }
 
     private fun sendIntentToService(action: String, alarmId: Int) {

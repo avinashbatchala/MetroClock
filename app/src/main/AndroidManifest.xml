@@ -24,6 +24,11 @@
         android:name="android.permission.USE_FINGERPRINT"
         tools:node="remove" />
 
+    <!-- Signature-protected cross-APK live tile state, shared by MetroSuite apps. -->
+    <permission
+        android:name="com.metro.permission.READ_TILE_STATE"
+        android:protectionLevel="signature" />
+
     <application
         android:name=".App"
         android:allowBackup="true"
@@ -32,6 +37,12 @@
         android:label="@string/app_launcher_name"
         android:roundIcon="@mipmap/ic_launcher"
         android:theme="@style/AppTheme">
+
+        <provider
+            android:name=".providers.ClockLiveTileProvider"
+            android:authorities="com.metro.clock.livetile"
+            android:exported="true"
+            android:readPermission="com.metro.permission.READ_TILE_STATE" />
 
         <activity
             android:name=".activities.SplashActivity"

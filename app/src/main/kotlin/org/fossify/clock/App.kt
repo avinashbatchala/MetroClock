@@ -35,6 +35,13 @@ class App : FossifyApp(), LifecycleObserver {
         super.onCreate()
         ProcessLifecycleOwner.get().lifecycle.addObserver(this)
         EventBus.getDefault().register(this)
+        // Surface stopwatch start/pause/reset to the live-tile contract (transitions only).
+        Stopwatch.addUpdateListener(object : Stopwatch.UpdateListener {
+            override fun onUpdate(totalTime: Long, lapTime: Long, useLongerMSFormat: Boolean) = Unit
+            override fun onStateChanged(state: Stopwatch.State) {
+                org.fossify.clock.providers.ClockLiveTileProvider.notifyChanged(this@App)
+            }
+        })
     }
 
     override fun onTerminate() {
@@ -79,6 +86,7 @@ class App : FossifyApp(), LifecycleObserver {
     fun onMessageEvent(event: TimerEvent.Reset) {
         updateTimerState(event.timerId, TimerState.Idle)
         countDownTimers[event.timerId]?.cancel()
+        org.fossify.clock.providers.ClockLiveTileProvider.notifyChanged(this)
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN)
@@ -87,6 +95,7 @@ class App : FossifyApp(), LifecycleObserver {
         timerHelper.deleteTimer(event.timerId) {
             EventBus.getDefault().post(TimerEvent.Refresh)
         }
+        org.fossify.clock.providers.ClockLiveTileProvider.notifyChanged(this)
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN)
@@ -102,6 +111,7 @@ class App : FossifyApp(), LifecycleObserver {
             }
         }.start()
         countDownTimers[event.timerId] = countDownTimer
+        org.fossify.clock.providers.ClockLiveTileProvider.notifyChanged(this)
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN)
@@ -117,6 +127,7 @@ class App : FossifyApp(), LifecycleObserver {
             }
 
             updateTimerState(event.timerId, TimerState.Finished)
+            org.fossify.clock.providers.ClockLiveTileProvider.notifyChanged(this)
             Handler(Looper.getMainLooper()).postDelayed({
                 hideNotification(event.timerId)
             }, config.timerMaxReminderSecs * 1000L)
@@ -131,6 +142,7 @@ class App : FossifyApp(), LifecycleObserver {
                 TimerState.Paused(event.duration, (timer.state as TimerState.Running).tick)
             )
             countDownTimers[event.timerId]?.cancel()
+            org.fossify.clock.providers.ClockLiveTileProvider.notifyChanged(this)
         }
     }
 

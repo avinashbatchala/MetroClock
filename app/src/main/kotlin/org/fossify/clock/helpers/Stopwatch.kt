@@ -142,6 +142,22 @@ object Stopwatch {
         }
     }
 
+    /**
+     * Read-only snapshot for the live-tile provider. For RUNNING the consumer computes
+     * elapsed locally as `accumulatedElapsed + (SystemClock.elapsedRealtime() - startElapsedRealtime)`.
+     */
+    data class Snapshot(
+        val state: State,
+        val startElapsedRealtime: Long,
+        val accumulatedElapsed: Long
+    )
+
+    fun snapshot(): Snapshot = when (state) {
+        State.RUNNING -> Snapshot(state, startTime, accumulatedTime)
+        State.PAUSED -> Snapshot(state, 0L, accumulatedTime)
+        State.STOPPED -> Snapshot(state, 0L, 0L)
+    }
+
     enum class State {
         RUNNING,
         PAUSED,
