@@ -67,12 +67,16 @@ class ClockLiveTileProvider : ContentProvider() {
 
     private fun buildState(): ClockTileState {
         val now = System.currentTimeMillis()
+        val timers = activeTimers()
+        val stopwatches = activeStopwatches()
         return ClockTileState(
             updatedAt = now,
             currentEpochMillis = now,
             nextAlarm = nextAlarm(),
-            timer = activeTimer(),
-            stopwatch = stopwatchState()
+            timer = timers.firstOrNull(),
+            stopwatch = stopwatches.firstOrNull(),
+            timers = timers,
+            stopwatches = stopwatches
         )
     }
 
@@ -94,8 +98,8 @@ class ClockLiveTileProvider : ContentProvider() {
         }.getOrNull()
     }
 
-    private fun activeTimer(): ClockTimerState? {
-        val context = context ?: return null
+    private fun activeTimers(): List<ClockTimerState> {
+        val context = context ?: return emptyList()
         val nowElapsed = SystemClock.elapsedRealtime()
         return runCatching {
             context.timerDb.getTimers().mapNotNull { timer ->
@@ -104,37 +108,43 @@ class ClockLiveTileProvider : ContentProvider() {
                         state = ClockRunState.RUNNING,
                         endElapsedRealtime = nowElapsed + state.tick,
                         remainingWhenPausedMillis = 0L,
-                        label = timer.label.ifBlank { null }
+                        label = timer.label.ifBlank { null },
+                        id = timer.id
                     )
                     is TimerState.Paused -> ClockTimerState(
                         state = ClockRunState.PAUSED,
                         endElapsedRealtime = 0L,
                         remainingWhenPausedMillis = state.tick,
-                        label = timer.label.ifBlank { null }
+                        label = timer.label.ifBlank { null },
+                        id = timer.id
                     )
                     else -> null
                 }
-            }.minByOrNull { timer ->
+            }.sortedBy { timer ->
                 if (timer.state == ClockRunState.RUNNING) timer.endElapsedRealtime
                 else nowElapsed + timer.remainingWhenPausedMillis
             }
-        }.getOrNull()
+        }.getOrDefault(emptyList())
     }
 
-    private fun stopwatchState(): ClockStopwatchState? {
+    private fun activeStopwatches(): List<ClockStopwatchState> {
         val snapshot = Stopwatch.snapshot()
         return when (snapshot.state) {
-            Stopwatch.State.RUNNING -> ClockStopwatchState(
-                state = ClockRunState.RUNNING,
-                startElapsedRealtime = snapshot.startElapsedRealtime,
-                accumulatedElapsedMillis = snapshot.accumulatedElapsed
+            Stopwatch.State.RUNNING -> listOf(
+                ClockStopwatchState(
+                    state = ClockRunState.RUNNING,
+                    startElapsedRealtime = snapshot.startElapsedRealtime,
+                    accumulatedElapsedMillis = snapshot.accumulatedElapsed
+                )
             )
-            Stopwatch.State.PAUSED -> ClockStopwatchState(
-                state = ClockRunState.PAUSED,
-                startElapsedRealtime = 0L,
-                accumulatedElapsedMillis = snapshot.accumulatedElapsed
+            Stopwatch.State.PAUSED -> listOf(
+                ClockStopwatchState(
+                    state = ClockRunState.PAUSED,
+                    startElapsedRealtime = 0L,
+                    accumulatedElapsedMillis = snapshot.accumulatedElapsed
+                )
             )
-            Stopwatch.State.STOPPED -> null
+            Stopwatch.State.STOPPED -> emptyList()
         }
     }
 

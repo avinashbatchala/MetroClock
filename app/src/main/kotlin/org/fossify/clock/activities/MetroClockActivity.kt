@@ -28,10 +28,10 @@ import org.fossify.clock.extensions.config
 import org.fossify.clock.extensions.getEnabledAlarms
 import org.fossify.clock.extensions.handleFullScreenNotificationsPermission
 import org.fossify.clock.extensions.updateWidgets
-import org.fossify.clock.fragments.AlarmFragment
 import org.fossify.clock.fragments.ClockFragment
 import org.fossify.clock.fragments.StopwatchFragment
 import org.fossify.clock.fragments.TimerFragment
+import org.fossify.clock.ui.AlarmPage
 import org.fossify.clock.helpers.OPEN_TAB
 import org.fossify.clock.helpers.TAB_ALARM
 import org.fossify.clock.helpers.TAB_CLOCK
@@ -73,7 +73,7 @@ class MetroClockActivity : SimpleActivity(), ClockHost {
                 accentColor = MetroColors.Blue,
                 darkTheme = isSystemInDarkTheme()
             ) {
-                MetroClockShell(initialTab = initialTab)
+                MetroClockShell(initialTab = initialTab, activity = this@MetroClockActivity)
             }
         }
     }
@@ -109,7 +109,7 @@ class MetroClockActivity : SimpleActivity(), ClockHost {
 }
 
 @Composable
-private fun MetroClockShell(initialTab: Int, modifier: Modifier = Modifier) {
+private fun MetroClockShell(initialTab: Int, activity: SimpleActivity, modifier: Modifier = Modifier) {
     val titles = listOf("alarms", "world clock", "timer", "stopwatch")
     val initialIndex = when (initialTab) {
         TAB_ALARM -> 0
@@ -142,7 +142,7 @@ private fun MetroClockShell(initialTab: Int, modifier: Modifier = Modifier) {
             modifier = Modifier.fillMaxSize()
         ) { page ->
             when (page) {
-                0 -> AndroidFragment<AlarmFragment>(modifier = Modifier.fillMaxSize())
+                0 -> AlarmPage(activity = activity, modifier = Modifier.fillMaxSize())
                 1 -> AndroidFragment<ClockFragment>(modifier = Modifier.fillMaxSize())
                 2 -> AndroidFragment<TimerFragment>(modifier = Modifier.fillMaxSize())
                 3 -> AndroidFragment<StopwatchFragment>(modifier = Modifier.fillMaxSize())
