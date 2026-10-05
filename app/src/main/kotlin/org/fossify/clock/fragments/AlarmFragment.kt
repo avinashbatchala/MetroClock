@@ -197,13 +197,13 @@ class AlarmFragment : Fragment(), ToggleAlarmInterface {
     }
 
     private fun checkAlarmState(alarm: Alarm) {
-        val activity = activity as? MainActivity ?: return
+        val host = activity as? org.fossify.clock.activities.ClockHost ?: return
         if (alarm.isEnabled) {
-            activity.alarmController.scheduleNextOccurrence(alarm = alarm, showToasts = true)
+            requireContext().alarmController.scheduleNextOccurrence(alarm = alarm, showToasts = true)
         } else {
-            activity.cancelAlarmClock(alarm)
+            requireContext().cancelAlarmClock(alarm)
         }
-        activity.updateClockTabAlarm()
+        host.updateClockTabAlarm()
     }
 
     fun updateAlarmSound(alarmSound: AlarmSound) {

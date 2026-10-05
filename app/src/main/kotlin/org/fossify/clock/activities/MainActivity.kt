@@ -58,7 +58,7 @@ import org.fossify.commons.models.FAQItem
 import java.time.temporal.WeekFields
 import java.util.Locale
 
-class MainActivity : SimpleActivity() {
+class MainActivity : SimpleActivity(), ClockHost {
     private var storedTextColor = 0
     private var storedBackgroundColor = 0
     private var storedPrimaryColor = 0
@@ -236,7 +236,7 @@ class MainActivity : SimpleActivity() {
         }
     }
 
-    fun updateClockTabAlarm() {
+    override fun updateClockTabAlarm() {
         getViewPagerAdapter()?.updateClockTabAlarm()
     }
 

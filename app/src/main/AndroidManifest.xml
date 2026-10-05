@@ -73,6 +73,22 @@
             android:windowSoftInputMode="adjustPan" />
 
         <activity
+            android:name=".activities.MetroClockActivity"
+            android:configChanges="orientation|screenSize|screenLayout"
+            android:exported="true"
+            android:launchMode="singleTask"
+            android:windowSoftInputMode="adjustPan">
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+
+                <data android:scheme="metroclock" />
+            </intent-filter>
+        </activity>
+
+        <activity
             android:name=".activities.AlarmActivity"
             android:configChanges="orientation|screenSize|screenLayout"
             android:excludeFromRecents="true"
